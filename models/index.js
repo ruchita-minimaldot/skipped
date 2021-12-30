@@ -38,3 +38,5 @@ db.Sequelize = Sequelize;
 module.exports = db;
 
 db.JobApplication.belongsTo(db.Job, { foreignKey: "jobId", as: "job" });
+db.JobProfileScore.belongsTo(db.Job, { foreignKey: "jobId", as: "job" });
+db.JobProfileScore.belongsTo(db.Profile, { foreignKey: "profileId", as: "profile" });
