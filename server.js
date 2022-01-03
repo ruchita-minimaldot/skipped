@@ -93,8 +93,8 @@ const companyRoute = require("./routes/company")(companyService);
 app.use("/api/company", companyRoute);
 
 // Company Type
-const companyTypeService = require("./services/companytype");
-const companyTypeRoute = require("./routes/companytype")(companyTypeService);
+const companyTypeService = require("./services/companyType");
+const companyTypeRoute = require("./routes/companyType")(companyTypeService);
 app.use("/api/companytype", companyTypeRoute);
 
 // visa type
