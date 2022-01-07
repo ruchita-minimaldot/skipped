@@ -1,4 +1,7 @@
 const Profile = require("../models").Profile;
+const Job = require("../models").Job;
+const JobProfileScore = require("../models").JobProfileScore;
+const profileScore = require("../middlewares/matchScore");
 const Op = require("sequelize").Op;
 const constants = require("../utils/constants").constants;
 
@@ -44,6 +47,7 @@ const postProfile = async (req, res, _) => {
     delete req.body.id;
     req.body.userId = req.body.user.uid;
     const profile = await Profile.create(req.body);
+    profileScore.updateProfileScore(profile);
     return res.json(profile);
   } catch (error) {
     console.error(error.message);
@@ -72,6 +76,7 @@ const putProfile = async (req, res, _) => {
     req.body.id = req.params.id;
     req.body.userId = req.body.user.uid;
     const profile = await Profile.upsert(req.body);
+    profileScore.updateProfileScore(profile);
     return res.json(profile);
   } catch (error) {
     console.error(error.message);
@@ -89,6 +94,7 @@ const deleteProfile = async (req, res, _) => {
     const profile = await Profile.destroy({
       where: { id: req.params.id, userId: req.body.user.uid },
     });
+    profileScore.deleteProfileScore(id);
     return res.json(profile);
   } catch (error) {
     console.error(error.message);
@@ -121,26 +127,36 @@ const findProfiles = async (req, res, _) => {
       query.industryIds = { [Op.like]: query.industryIds };
     }
     if (req.body.profile.roleTag === constants.ROLE_TAGS.RECRUITER) {
+      let profileIds = [];
+      // logic for get by score for recruiter
+      if (query.minScore && query.maxScore && query.jobId && !query.id) {
+        let job = await Job.findOne({
+          where: { id: query.jobId, createdBy: req.body.profile.id },
+        });
+        if (!job) {
+          return res.status(403).json({
+            message: "Invalid job Id",
+            description: "User is not authorized to get profile by score for this job.",
+          });
+        }
+        profiles = await JobProfileScore.findAll({
+          where: { jobId: query.jobId, score: { [Op.between]: [query.minScore, query.maxScore] } },
+          order: [["score", "DESC"]],
+          include: [{ model: Profile, as: "profile" }],
+          nest: true,
+          raw: true,
+        });
+        return res.json(profiles);
+      }
       query.roleTag = constants.ROLE_TAGS.CANDIDATE;
-      profiles = await Profile.findAll({
-        where: query,
-        order: [["updatedAt", "DESC"]],
-        raw: true,
-      });
     } else if (req.body.profile.roleTag === constants.ROLE_TAGS.CANDIDATE) {
       query.roleTag = constants.ROLE_TAGS.RECRUITER;
-      profiles = await Profile.findAll({
-        where: query,
-        order: [["updatedAt", "DESC"]],
-        raw: true,
-      });
-    } else {
-      profiles = await Profile.findAll({
-        where: query,
-        order: [["updatedAt", "DESC"]],
-        raw: true,
-      });
     }
+    profiles = await Profile.findAll({
+      where: query,
+      order: [["updatedAt", "DESC"]],
+      raw: true,
+    });
     return res.json(profiles);
   } catch (error) {
     console.error(error.message);

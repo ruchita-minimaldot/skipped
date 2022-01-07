@@ -1,9 +1,10 @@
 const Job = require("../models").Job;
 const constants = require("../utils/constants").constants;
 const JobApplication = require("../models").JobApplication;
+const JobProfileScore = require("../models").JobProfileScore;
+const jobScore = require("../middlewares/matchScore");
 
-var Sequelize = require("sequelize");
-const Op = Sequelize.Op;
+const Op = require("sequelize").Op;
 
 const getJobs = async (req, res, _) => {
   try {
@@ -54,6 +55,7 @@ const postJob = async (req, res, _) => {
     delete req.body.id;
     req.body.createdBy = req.body.profile.id;
     const job = await Job.create(req.body);
+    jobScore.updateJobScore(job);
     return res.json(job);
   } catch (error) {
     console.error(error.message);
@@ -83,6 +85,7 @@ const putJob = async (req, res, _) => {
     }
     req.body.createdBy = req.body.profile.id;
     const job = await Job.upsert(req.body);
+    jobScore.updateJobScore(job);
     return res.json(job);
   } catch (error) {
     console.error(error.message);
@@ -104,6 +107,7 @@ const deleteJob = async (req, res, _) => {
     const job = await Job.destroy({
       where: { id: req.params.id, createdBy: req.body.profile.id },
     });
+    jobScore.deleteJobScore(id);
     return res.json(job);
   } catch (error) {
     console.error(error.message);
@@ -123,11 +127,6 @@ const findJobs = async (req, res, _) => {
     }
     if (req.body.profile.roleTag === constants.ROLE_TAGS.RECRUITER) {
       query.createdBy = req.body.profile.id;
-      jobs = await Job.findAll({
-        where: query,
-        order: [["updatedAt", "DESC"]],
-        raw: true,
-      });
     } else {
       const appliedJobIds = await JobApplication.findAll({
         where: { appliedBy: req.body.profile.id },
@@ -138,12 +137,23 @@ const findJobs = async (req, res, _) => {
         return a.jobId;
       });
       query.id = { [Op.notIn]: jobIds };
-      jobs = await Job.findAll({
-        where: query,
-        order: [["updatedAt", "DESC"]],
-        raw: true,
-      });
+      // logic to get by score for candidate
+      if (query.minScore && query.maxScore) {
+        let jobs = await JobProfileScore.findAll({
+          where: { profileId: req.body.profile.id, jobId: { [Op.notIn]: jobIds }, score: { [Op.between]: [query.minScore, query.maxScore] } },
+          order: [["score", "DESC"]],
+          include: [{ model: Job, as: "job" }],
+          nest: true,
+          raw: true,
+        });
+        return res.json(jobs);
+      }
     }
+    jobs = await Job.findAll({
+      where: query,
+      order: [["updatedAt", "DESC"]],
+      raw: true,
+    });
     return res.json(jobs);
   } catch (error) {
     console.error(error.message);

@@ -43,7 +43,7 @@ const postMatchScore = async (req, res, _) => {
     } else if (req.body.profile.roleTag === constants.ROLE_TAGS.RECRUITER) {
       req.body.profileId = req.body.profile.id;
     } else {
-      req.body.profileId = "default";
+      req.body.profileId = constants.DEFAULT;
     }
     let matchScore = await MatchScore.findOne({
       where: { profileId: req.body.profile.id },
