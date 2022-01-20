@@ -17,9 +17,12 @@ const deleteProfileScore = async (id) => {
     }
 }
 
-const updateProfileScore = async (profile) => {
+const updateProfileScore = async (profileId) => {
     try {
-        await deleteProfileScore(profile.id);
+        const profile = await Profile.findOne({
+            where: { id: profileId },
+        });
+        await deleteProfileScore(profileId);
         const jobs = await Job.findAll({
             offset: 0, limit: 1000, raw: true,
         });
@@ -41,7 +44,7 @@ const updateProfileScore = async (profile) => {
                 jobs = [];
             }
         }
-        console.log(`All jobs score updated successfully for profile: ${profile.id}`);
+        console.log(`All jobs score updated successfully for profile: ${profileId}`);
     } catch (error) {
         console.error(`Error while updating profile score: ${error.message}`);
     }
@@ -94,9 +97,12 @@ const deg2rad = (deg) => {
 }
 
 
-const updateJobScore = async (job) => {
+const updateJobScore = async (jobId) => {
     try {
-        await deleteJobScore(job.id);
+        const job = await Job.findOne({
+            where: { id: jobId },
+        });
+        await deleteJobScore(jobId);
         const profiles = await Profile.findAll({
             where: { roleTag: constants.ROLE_TAGS.CANDIDATE },
             offset: 0, limit: 1000, raw: true,
@@ -120,7 +126,7 @@ const updateJobScore = async (job) => {
                 profiles = [];
             }
         }
-        console.log(`All score updated successfully for job: ${job.id}`);
+        console.log(`All score updated successfully for job: ${jobId}`);
     } catch (error) {
         console.error(`Error while updating job score: ${error.message}`);
     }

@@ -55,7 +55,7 @@ const postJob = async (req, res, _) => {
     delete req.body.id;
     req.body.createdBy = req.body.profile.id;
     const job = await Job.create(req.body);
-    jobScore.updateJobScore(job);
+    jobScore.updateJobScore(job.id);
     return res.json(job);
   } catch (error) {
     console.error(error.message);
@@ -83,9 +83,10 @@ const putJob = async (req, res, _) => {
         description: "User is not authorized to update job.",
       });
     }
+    req.body.id = req.params.id;
     req.body.createdBy = req.body.profile.id;
     const job = await Job.upsert(req.body);
-    jobScore.updateJobScore(job);
+    jobScore.updateJobScore(req.params.id);
     return res.json(job);
   } catch (error) {
     console.error(error.message);
@@ -107,7 +108,7 @@ const deleteJob = async (req, res, _) => {
     const job = await Job.destroy({
       where: { id: req.params.id, createdBy: req.body.profile.id },
     });
-    jobScore.deleteJobScore(id);
+    jobScore.deleteJobScore(req.params.id);
     return res.json(job);
   } catch (error) {
     console.error(error.message);
