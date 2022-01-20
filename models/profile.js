@@ -108,6 +108,10 @@ module.exports = function (sequelize, Sequelize) {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
+      remote: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+      },
     },
     {
       paranoid: true,

@@ -32,15 +32,11 @@ module.exports = function (sequelize, Sequelize) {
         type: Sequelize.BOOLEAN,
         allowNull: true,
       },
-      visaId: {
+      visaIds: {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      lat: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      long: {
+      location: {
         type: Sequelize.STRING,
         allowNull: true,
       },
@@ -48,35 +44,19 @@ module.exports = function (sequelize, Sequelize) {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      minPaidAmount: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-      },
-      maxPaidAmount: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-      },
-      paidAmount: {
+      salaryRangeIds: {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      minExperienceRequired: {
+      totalExperienceIds: {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      maxExperienceRequired: {
+      jobTypeIds: {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      experienceRequired: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      jobTypeId: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      industryId: {
+      industryIds: {
         type: Sequelize.STRING,
         allowNull: true,
       },
@@ -98,6 +78,14 @@ module.exports = function (sequelize, Sequelize) {
       },
       createdBy: {
         type: Sequelize.STRING,
+        allowNull: true,
+      },
+      preferredEducationIds: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      jobTitleIds: {
+        type: Sequelize.UUID,
         allowNull: true,
       },
     },

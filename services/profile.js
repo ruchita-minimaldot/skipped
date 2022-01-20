@@ -47,7 +47,7 @@ const postProfile = async (req, res, _) => {
     delete req.body.id;
     req.body.userId = req.body.user.uid;
     const profile = await Profile.create(req.body);
-    profileScore.updateProfileScore(profile);
+    profileScore.updateProfileScore(profile.id);
     return res.json(profile);
   } catch (error) {
     console.error(error.message);
@@ -76,7 +76,7 @@ const putProfile = async (req, res, _) => {
     req.body.id = req.params.id;
     req.body.userId = req.body.user.uid;
     const profile = await Profile.upsert(req.body);
-    profileScore.updateProfileScore(profile);
+    profileScore.updateProfileScore(req.params.id);
     return res.json(profile);
   } catch (error) {
     console.error(error.message);
