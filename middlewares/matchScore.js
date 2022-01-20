@@ -58,6 +58,41 @@ const deleteJobScore = async (id) => {
     }
 }
 
+const countJobScore = (job, profile, compare, skillCount) => {
+    jobArr = job.toString().split(",");
+    profileArr = profile.toString().split(",");
+    let count = 0;
+    profileArr.forEach(p => {
+        if (jobArr.includes(p)) {
+            count++;
+        }
+    });
+    if(compare) {
+        const pPer = count / jobArr.length;
+        return skillCount * pPer;
+    } else {
+        return skillCount;
+    }
+}
+
+const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2 - lat1);  // deg2rad below
+    var dLon = deg2rad(lon2 - lon1);
+    var a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        ;
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = R * c; // Distance in km
+    return d;
+}
+
+const deg2rad = (deg) => {
+    return deg * (Math.PI / 180);
+}
+
 
 const updateJobScore = async (job) => {
     try {
@@ -107,45 +142,46 @@ const processJobProfileScore = async (profile, job, matchScore) => {
             profileId: profile.id,
             score: 0,
         }
-        // primarySkill
-        if (job.primarySkills.toLowercase().sort() === profile.primarySkillIds.toLowercase().sort()) {
-            score.score += matchScore.primarySkill;
+        if (job.primarySkills && profile.primarySkillIds) {
+            score.score += countJobScore(job.primarySkills, profile.primarySkillIds, true, matchScore.primarySkill);
         }
-        // secondarySkill
-        if (job.secondarySkills.toLowercase().sort() === profile.secondarySkillIds.toLowercase().sort()) {
-            score.score += matchScore.secondarySkill;
+        if (job.secondarySkills && profile.secondarySkillIds) {
+            score.score += countJobScore(job.secondarySkills, profile.secondarySkillIds, true, matchScore.secondarySkill);
         }
-        // industry
-        if (job.industryId.toLowercase().sort() === profile.industryIds.toLowercase().sort()) {
-            score.score += matchScore.industry;
+        if (job.industryIds && profile.industryIds) {
+            score.score += countJobScore(job.industryIds, profile.industryIds, true, matchScore.industry);
         }
-        // visaType
-        if (job.visaId.toLowercase().sort() === profile.visaIds.toLowercase().sort()) {
-            score.score += matchScore.visaType;
+        if (job.visaIds && profile.visaIds) {
+            score.score += countJobScore(job.visaIds, profile.visaIds, true, matchScore.visaType);
         }
-        // experiance
-        if (job.experienceRequired.toLowercase().sort() === profile.totalExperience.toLowercase().sort()) {
-            score.score += matchScore.experiance;
+        if (job.totalExperienceIds && profile.totalExperience) {
+            score.score += countJobScore(job.totalExperienceIds, profile.totalExperience, false, matchScore.experiance);
         }
-        // salary => job
-        if (job.experienceRequired.toLowercase().sort() === profile.salaryRangeId.toLowercase().sort()) {
-            score.score += matchScore.salary;
+        if (job.salaryRangeIds && profile.salaryRangeId) {
+            score.score += countJobScore(job.salaryRangeIds, profile.salaryRangeId, false, matchScore.salary);
         }
-        // jobTitle => job
-        if (job.title.toLowercase().sort() === profile.jobTitleId.toLowercase().sort()) {
-            score.score += matchScore.jobTitle;
+        if (job.jobTitleIds && profile.jobTitleId) {
+            score.score += countJobScore(job.jobTitleIds, profile.jobTitleId, false, matchScore.jobTitle);
         }
-        // remoteWork
-        if (job.title.toLowercase().sort() === profile.jobTitleId.toLowercase().sort()) {
-            score.score += matchScore.remoteWork;
+        if (job.remote && profile.remote) {
+            score.score += countJobScore(job.remote, profile.remote, false, matchScore.remoteWork);
         }
-        // location => job
-        if ((job.lat + "," + job.long) === profile.location) {
-            score.score += matchScore.location;
+        if (job.location && profile.location) {
+            jLL = job.location.split(",");
+            pLL = profile.location.split(",");
+            distKM = getDistanceFromLatLonInKm(jLL[0], jLL[1], pLL[0], pLL[1]);
+            let dPer = 0;
+            if (distKM < 30) {
+                dPer = 1;
+            } else if (distKM < 50) {
+                dPer = 0.75;;
+            } else if (distKM < 100) {
+                dPer = 0.5;
+            }
+            score.score += matchScore.location * dPer;
         }
-        // education => job
-        if (job.education === profile.educationId) {
-            score.score += matchScore.education;
+        if (job.preferredEducationIds && profile.educationId) {
+            score.score += countJobScore(job.preferredEducationIds, profile.educationId, false, matchScore.education);
         }
 
         if (score.score >= 50) {

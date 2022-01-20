@@ -32,7 +32,7 @@ module.exports = function (sequelize, Sequelize) {
         type: Sequelize.BOOLEAN,
         allowNull: true,
       },
-      visaId: {
+      visaIds: {
         type: Sequelize.STRING,
         allowNull: true,
       },
