@@ -19,11 +19,11 @@ const deleteProfileScore = async (id) => {
 
 const updateProfileScore = async (profileId) => {
     try {
-        const profile = await Profile.findOne({
+        let profile = await Profile.findOne({
             where: { id: profileId },
         });
         await deleteProfileScore(profileId);
-        const jobs = await Job.findAll({
+        let jobs = await Job.findAll({
             offset: 0, limit: 1000, raw: true,
         });
         let count = 0;
@@ -99,15 +99,15 @@ const deg2rad = (deg) => {
 
 const updateJobScore = async (jobId) => {
     try {
-        const job = await Job.findOne({
+        let job = await Job.findOne({
             where: { id: jobId },
         });
         await deleteJobScore(jobId);
-        const profiles = await Profile.findAll({
+        let profiles = await Profile.findAll({
             where: { roleTag: constants.ROLE_TAGS.CANDIDATE },
             offset: 0, limit: 1000, raw: true,
         });
-        const matchScore = await MatchScore.findOne({
+        let matchScore = await MatchScore.findOne({
             where: { profileId: job.createdBy },
             raw: true,
         });
