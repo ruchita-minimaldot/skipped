@@ -74,7 +74,11 @@ const countJobScore = (job, profile, compare, skillCount) => {
         const pPer = count / jobArr.length;
         return skillCount * pPer;
     } else {
-        return skillCount;
+        if(count > 0) {
+            return skillCount
+        } else {
+            return 0;
+        }
     }
 }
 
