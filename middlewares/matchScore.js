@@ -11,7 +11,6 @@ const deleteProfileScore = async (id) => {
         JobProfileScore.destroy({
             where: { profileId: id },
         });
-        console.log(`All jobs score delete successfully for profile: ${id}`);
     } catch (error) {
         console.error(`Error while deleting profile score: ${error.message}`);
     }
@@ -44,7 +43,6 @@ const updateProfileScore = async (profileId) => {
                 jobs = [];
             }
         }
-        console.log(`All jobs score updated successfully for profile: ${profileId}`);
     } catch (error) {
         console.error(`Error while updating profile score: ${error.message}`);
     }
@@ -55,21 +53,26 @@ const deleteJobScore = async (id) => {
         JobProfileScore.destroy({
             where: { jobId: id },
         });
-        console.log(`All score delete successfully for job: ${id}`);
     } catch (error) {
         console.error(`Error while deleting job score: ${error.message}`);
     }
 }
 
-const countJobScore = (job, profile, compare, skillCount) => {
+const countJobScore = (job, profile, compare, skillCount, param) => {
     jobArr = job.toString().split(",");
     profileArr = profile.toString().split(",");
     let count = 0;
-    profileArr.forEach(p => {
-        if (jobArr.includes(p)) {
-            count++;
-        }
-    });
+   
+    if(param === 'rw') {
+        return skillCount
+    } else {
+        profileArr.forEach(p => {
+            if (jobArr.includes(p)) {
+                count++;
+            }
+        });
+    }
+  
     if(compare) {
         const pPer = count / jobArr.length;
         return skillCount * pPer;
@@ -130,7 +133,6 @@ const updateJobScore = async (jobId) => {
                 profiles = [];
             }
         }
-        console.log(`All score updated successfully for job: ${jobId}`);
     } catch (error) {
         console.error(`Error while updating job score: ${error.message}`);
     }
@@ -153,28 +155,28 @@ const processJobProfileScore = async (profile, job, matchScore) => {
             score: 0,
         }
         if (job.primarySkills && profile.primarySkillIds) {
-            score.score += countJobScore(job.primarySkills, profile.primarySkillIds, true, matchScore.primarySkill);
+            score.score += countJobScore(job.primarySkills, profile.primarySkillIds, true, matchScore.primarySkill, 'ps');
         }
         if (job.secondarySkills && profile.secondarySkillIds) {
-            score.score += countJobScore(job.secondarySkills, profile.secondarySkillIds, true, matchScore.secondarySkill);
+            score.score += countJobScore(job.secondarySkills, profile.secondarySkillIds, true, matchScore.secondarySkill, 'ss');
         }
         if (job.industryIds && profile.industryIds) {
-            score.score += countJobScore(job.industryIds, profile.industryIds, true, matchScore.industry);
+            score.score += countJobScore(job.industryIds, profile.industryIds, true, matchScore.industry, 'in');
         }
         if (job.visaIds && profile.visaIds) {
-            score.score += countJobScore(job.visaIds, profile.visaIds, true, matchScore.visaType);
+            score.score += countJobScore(job.visaIds, profile.visaIds, true, matchScore.visaType, 'vt');
         }
         if (job.totalExperienceIds && profile.totalExperience) {
-            score.score += countJobScore(job.totalExperienceIds, profile.totalExperience, false, matchScore.experiance);
+            score.score += countJobScore(job.totalExperienceIds, profile.totalExperience, false, matchScore.experiance, 'te');
         }
         if (job.salaryRangeIds && profile.salaryRangeId) {
-            score.score += countJobScore(job.salaryRangeIds, profile.salaryRangeId, false, matchScore.salary);
+            score.score += countJobScore(job.salaryRangeIds, profile.salaryRangeId, false, matchScore.salary, 'sa');
         }
         if (job.jobTitleIds && profile.jobTitleId) {
-            score.score += countJobScore(job.jobTitleIds, profile.jobTitleId, false, matchScore.jobTitle);
+            score.score += countJobScore(job.jobTitleIds, profile.jobTitleId, false, matchScore.jobTitle, 'jt');
         }
-        if (job.remote && profile.remote) {
-            score.score += countJobScore(job.remote, profile.remote, false, matchScore.remoteWork);
+        if ((job.remote === true) && (profile.remote === 1)) {
+            score.score += countJobScore(job.remote, profile.remote, false, matchScore.remoteWork, 'rw');
         }
         if (job.location && profile.location) {
             jLL = job.location.split(",");
@@ -191,7 +193,7 @@ const processJobProfileScore = async (profile, job, matchScore) => {
             score.score += matchScore.location * dPer;
         }
         if (job.preferredEducationIds && profile.educationId) {
-            score.score += countJobScore(job.preferredEducationIds, profile.educationId, false, matchScore.education);
+            score.score += countJobScore(job.preferredEducationIds, profile.educationId, false, matchScore.education, 'ed');
         }
 
         if (score.score >= 50) {
